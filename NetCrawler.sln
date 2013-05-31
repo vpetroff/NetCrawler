@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCrawler.Core", "NetCrawler.Core\NetCrawler.Core.csproj", "{5E694DEB-6942-4629-BD14-EF9407A5C5E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCrawler.Tests", "NetCrawler.Tests\NetCrawler.Tests.csproj", "{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0212CBC2-2E54-4302-851E-7B4DCBCF04A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E694DEB-6942-4629-BD14-EF9407A5C5E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E694DEB-6942-4629-BD14-EF9407A5C5E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E694DEB-6942-4629-BD14-EF9407A5C5E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E694DEB-6942-4629-BD14-EF9407A5C5E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3} = {0212CBC2-2E54-4302-851E-7B4DCBCF04A8}
+	EndGlobalSection
+EndGlobal
