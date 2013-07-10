@@ -1,4 +1,6 @@
-﻿namespace NetCrawler.Core
+﻿using System.Threading.Tasks;
+
+namespace NetCrawler.Core
 {
 	public class WebsiteCrawler : IWebsiteCrawler
 	{
@@ -9,11 +11,9 @@
 			this.crawlScheduler = crawlScheduler;
 		}
 
-		public CrawlResult Run(Website target)
+		public async Task<CrawlResult> RunAsync(Website target)
 		{
-			crawlScheduler.Schedule(target);
-
-			return new CrawlResult();
+			return await crawlScheduler.Schedule(target);
 		}
 	}
 }

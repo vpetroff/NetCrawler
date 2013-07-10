@@ -1,7 +1,11 @@
-﻿namespace NetCrawler.Core
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace NetCrawler.Core
 {
 	public interface ICrawlScheduler
 	{
-		void Schedule(Website website);
+		Task<CrawlResult> Schedule(Website website);
+		int Schedule(IEnumerable<string> urls);
 	}
 }

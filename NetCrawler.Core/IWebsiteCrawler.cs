@@ -1,7 +1,9 @@
-﻿namespace NetCrawler.Core
+﻿using System.Threading.Tasks;
+
+namespace NetCrawler.Core
 {
 	public interface IWebsiteCrawler
 	{
-		CrawlResult Run(Website target);
+		Task<CrawlResult> RunAsync(Website target);
 	}
 }

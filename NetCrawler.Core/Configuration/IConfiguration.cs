@@ -4,5 +4,6 @@
 	{
 		string UserAgent { get; set; }
 		bool FollowExternalLinks { get; set; }
+		int MaxConcurrentConnectionsPerWebsite { get; set; }
 	}
 }

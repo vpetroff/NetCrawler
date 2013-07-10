@@ -15,5 +15,7 @@ namespace NetCrawler.Core
 
 		public string Contents { get; set; }
 		public IEnumerable<string> Links { get; set; }
+
+		public CrawlUrl CrawlUrl { get; set; }
 	}
 }
