@@ -15,21 +15,21 @@ namespace NetCrawler.Core
 	public class LocalCrawlScheduler : ICrawlScheduler
 	{
 		private readonly IConfiguration configuration;
-		private readonly IPageDownloader pageDownloader;
-		private readonly IHtmlParser htmlParser;
+		private readonly ISinglePageCrawler pageCrawler;
 		private readonly ConcurrentDictionary<byte[], CrawlUrl> urls = new ConcurrentDictionary<byte[], CrawlUrl>(); // {hash, url}
 		private readonly ConcurrentBag<WebsiteBlock> websites = new ConcurrentBag<WebsiteBlock>();
 		private readonly object websiteLock = new object();
-		private ActionBlock<PageCrawlResult> schedulingBlock;
+		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
 
-		public LocalCrawlScheduler(IConfiguration configuration, IPageDownloader pageDownloader, IHtmlParser htmlParser)
+		public LocalCrawlScheduler(IConfiguration configuration, ISinglePageCrawler pageCrawler)
 		{
 			this.configuration = configuration;
-			this.pageDownloader = pageDownloader;
-			this.htmlParser = htmlParser;
+			this.pageCrawler = pageCrawler;
 
 			schedulingBlock = new ActionBlock<PageCrawlResult>(result =>
 				{
+					RaisePageCrawledEvent(result);
+
 					var scheduledLinksCount = 0;
 
 					if (result.Links.Any())
@@ -45,11 +45,30 @@ namespace NetCrawler.Core
 				});
 		}
 
+		public event PageCrawledEventHandler PageCrawledEventHandler;
+
+		private void RaisePageCrawledEvent(PageCrawlResult result)
+		{
+			var handler = PageCrawledEventHandler;
+			if (handler != null)
+				handler.Invoke(this, result);
+		}
+
 		public Task<CrawlResult> Schedule(Website website)
 		{
 			var existing = websites.FirstOrDefault(x => x.Website == website);
 			if (existing != null)
 				return existing.CompletionSource.Task;
+
+			if (website == null || string.IsNullOrWhiteSpace(website.RootUrl))
+			{
+				var cancelledTask = new TaskCompletionSource<CrawlResult>();
+				cancelledTask.SetCanceled();
+
+				return cancelledTask.Task;
+			}
+
+			website.RootUrl = website.RootUrl.Split('#')[0].TrimEnd('/');
 
 			WebsiteBlock websiteBlock;
 			lock (websiteLock)
@@ -57,10 +76,12 @@ namespace NetCrawler.Core
 				var processingBlock = new TransformBlock<CrawlUrl, PageCrawlResult>(crawlUrl =>
 					{
 						Console.WriteLine(crawlUrl.Url);
-						var result = new SinglePageCrawler(htmlParser, pageDownloader).Crawl(crawlUrl.Url);
+
+						var result = pageCrawler.Crawl(crawlUrl.Url);
 						result.CrawlUrl = crawlUrl;
 
 						Interlocked.Increment(ref crawlUrl.Website.ProcessedUrlsCount);
+
 						return result;
 					}, new ExecutionDataflowBlockOptions
 						{

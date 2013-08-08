@@ -22,10 +22,11 @@ namespace NetCrawler.Core
 			if (downloadResponse.IsSuccessful)
 			{
 				crawlResult.Contents = downloadResponse.Contents;
-				crawlResult.Links = htmlParser.ExtractLinks(downloadResponse.Contents);
+				crawlResult.Links = htmlParser.ExtractLinks(url, downloadResponse.Contents);
 			}
 
 			crawlResult.CrawlEndedAt = DateTimeOffset.UtcNow;
+
 			return crawlResult;
 		}
 	}

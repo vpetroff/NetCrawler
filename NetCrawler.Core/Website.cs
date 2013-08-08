@@ -25,7 +25,9 @@ namespace NetCrawler.Core
 
 		public bool IsRelativeUrl(CrawlUrl crawlUrl)
 		{
-			return rootUri.IsBaseOf(crawlUrl.Uri);
+			return crawlUrl.Uri.AbsoluteUri.StartsWith(rootUri.AbsoluteUri);
+
+//			return rootUri.IsBaseOf(crawlUrl.Uri);
 		}
 	}
 }

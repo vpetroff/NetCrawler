@@ -7,5 +7,8 @@ namespace NetCrawler.Core
 	{
 		Task<CrawlResult> Schedule(Website website);
 		int Schedule(IEnumerable<string> urls);
+		event PageCrawledEventHandler PageCrawledEventHandler;
 	}
+
+	public delegate void PageCrawledEventHandler(object sender, PageCrawlResult pageCrawlResult);
 }
