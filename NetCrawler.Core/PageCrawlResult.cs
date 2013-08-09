@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NetCrawler.Core
 {
@@ -8,6 +9,7 @@ namespace NetCrawler.Core
 		public PageCrawlResult()
 		{
 			CrawlStartedAt = DateTimeOffset.UtcNow;
+			Links = Enumerable.Empty<string>();
 		}
 
 		public DateTimeOffset CrawlStartedAt { get; set; }

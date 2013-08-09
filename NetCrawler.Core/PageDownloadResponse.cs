@@ -8,9 +8,6 @@ namespace NetCrawler.Core
 		public string Contents { get; set; }
 		public long Latency { get; set; }
 
-		public bool IsSuccessful
-		{
-			get { return true; }
-		}
+		public bool IsSuccessful { get; set; }
 	}
 }

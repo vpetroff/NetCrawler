@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Mime;
@@ -21,23 +22,32 @@ namespace NetCrawler.Core
 			var latencyTimer = new Stopwatch();
 			latencyTimer.Start();
 
-			var request = (HttpWebRequest)WebRequest.Create(url);
-			request.AllowAutoRedirect = true;
-			request.MaximumAutomaticRedirections = 7;
-			request.UserAgent = configuration.UserAgent;
-			request.Accept = MediaTypeNames.Text.Html;
-
-			downloadResponse.HttpWebResponse = (HttpWebResponse)request.GetResponse();
-
-			var responseStream = downloadResponse.HttpWebResponse.GetResponseStream();
-
-			if (responseStream != null)
+			try
 			{
-				using (var sr = new StreamReader(responseStream))
+				var request = (HttpWebRequest)WebRequest.Create(url);
+				request.AllowAutoRedirect = true;
+				request.MaximumAutomaticRedirections = 7;
+				request.UserAgent = configuration.UserAgent;
+				request.Accept = MediaTypeNames.Text.Html;
+
+				downloadResponse.HttpWebResponse = (HttpWebResponse)request.GetResponse();
+
+				var responseStream = downloadResponse.HttpWebResponse.GetResponseStream();
+
+				if (responseStream != null)
 				{
-					downloadResponse.Contents = sr.ReadToEnd();
-					sr.Close();
+					using (var sr = new StreamReader(responseStream))
+					{
+						downloadResponse.Contents = sr.ReadToEnd();
+						sr.Close();
+					}
 				}
+
+				downloadResponse.IsSuccessful = true;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
 			}
 
 			latencyTimer.Stop();

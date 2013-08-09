@@ -54,13 +54,15 @@
     <Compile Include="ICrawlScheduler.cs" />
     <Compile Include="IHtmlParser.cs" />
     <Compile Include="IPageDownloader.cs" />
-    <Compile Include="IPagePersister.cs" />
+    <Compile Include="ICrawlPersister.cs" />
     <Compile Include="ISinglePageCrawler.cs" />
+    <Compile Include="IUrlHasher.cs" />
     <Compile Include="LocalCrawlScheduler.cs" />
     <Compile Include="PageCrawlResult.cs" />
     <Compile Include="PageDownloader.cs" />
     <Compile Include="PageDownloadResponse.cs" />
     <Compile Include="SinglePageCrawler.cs" />
+    <Compile Include="UrlHasher.cs" />
     <Compile Include="WebsiteCrawler.cs" />
     <Compile Include="CrawlResult.cs" />
     <Compile Include="IWebsiteCrawler.cs" />

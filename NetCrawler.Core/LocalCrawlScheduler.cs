@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -14,6 +12,7 @@ namespace NetCrawler.Core
 {
 	public class LocalCrawlScheduler : ICrawlScheduler
 	{
+		private readonly IUrlHasher urlHasher;
 		private readonly IConfiguration configuration;
 		private readonly ISinglePageCrawler pageCrawler;
 		private readonly ConcurrentDictionary<byte[], CrawlUrl> urls = new ConcurrentDictionary<byte[], CrawlUrl>(); // {hash, url}
@@ -21,15 +20,18 @@ namespace NetCrawler.Core
 		private readonly object websiteLock = new object();
 		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
 
-		public LocalCrawlScheduler(IConfiguration configuration, ISinglePageCrawler pageCrawler)
+		public LocalCrawlScheduler(IUrlHasher urlHasher, IConfiguration configuration, ISinglePageCrawler pageCrawler)
 		{
+			this.urlHasher = urlHasher;
 			this.configuration = configuration;
 			this.pageCrawler = pageCrawler;
 
 			schedulingBlock = new ActionBlock<PageCrawlResult>(result =>
 				{
-					RaisePageCrawledEvent(result);
+					Interlocked.Increment(ref result.CrawlUrl.Website.ProcessedUrlsCount);
 
+					RaisePageCrawled(result);
+					
 					var scheduledLinksCount = 0;
 
 					if (result.Links.Any())
@@ -45,13 +47,29 @@ namespace NetCrawler.Core
 				});
 		}
 
-		public event PageCrawledEventHandler PageCrawledEventHandler;
-
-		private void RaisePageCrawledEvent(PageCrawlResult result)
+		public event Action<CrawlUrl> PageScheduled;
+		public event Action<PageCrawlResult> PageCrawled;
+		public event Action<Website> WebsiteScheduled;
+		
+		private void RaisePageScheduled(CrawlUrl crawlUrl)
 		{
-			var handler = PageCrawledEventHandler;
+			var handler = PageScheduled;
 			if (handler != null)
-				handler.Invoke(this, result);
+				handler.Invoke(crawlUrl);
+		}
+
+		private void RaisePageCrawled(PageCrawlResult result)
+		{
+			var handler = PageCrawled;
+			if (handler != null)
+				handler.Invoke(result);
+		}
+
+		private void RaiseWebsiteScheduled(Website website)
+		{
+			var handler = WebsiteScheduled;
+			if (handler != null)
+				handler.Invoke(website);
 		}
 
 		public Task<CrawlResult> Schedule(Website website)
@@ -75,12 +93,8 @@ namespace NetCrawler.Core
 			{
 				var processingBlock = new TransformBlock<CrawlUrl, PageCrawlResult>(crawlUrl =>
 					{
-						Console.WriteLine(crawlUrl.Url);
-
 						var result = pageCrawler.Crawl(crawlUrl.Url);
 						result.CrawlUrl = crawlUrl;
-
-						Interlocked.Increment(ref crawlUrl.Website.ProcessedUrlsCount);
 
 						return result;
 					}, new ExecutionDataflowBlockOptions
@@ -103,14 +117,16 @@ namespace NetCrawler.Core
 				websites.Add(websiteBlock);
 			}
 
-			Schedule(new[]{ website.RootUrl });
+			RaiseWebsiteScheduled(website);
+
+			Schedule(new[] { website.RootUrl });
 
 			return websiteBlock.CompletionSource.Task;
 		}
 
 		public int Schedule(IEnumerable<string> crawlUrls)
 		{
-			var hashes = new Dictionary<byte[], string>(crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).ToDictionary(CalculateHash));
+			var hashes = new Dictionary<byte[], string>(crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).ToDictionary(urlHasher.CalculateHash));
 			var scheduledLinksCount = 0;
 
 			foreach (var hash in hashes)
@@ -123,6 +139,7 @@ namespace NetCrawler.Core
 					var crawlUrl = new CrawlUrl
 						{
 							Hash = hash.Key,
+							Base64Hash = Convert.ToBase64String(hash.Key),
 							Url = hash.Value,
 						};
 
@@ -135,6 +152,8 @@ namespace NetCrawler.Core
 							Interlocked.Increment(ref website.UrlsToProcessCount);
 							Interlocked.Increment(ref scheduledLinksCount);
 							website.ProcessingBlock.Post(crawlUrl);
+
+							RaisePageScheduled(crawlUrl);
 						}
 					}
 				}
@@ -145,11 +164,6 @@ namespace NetCrawler.Core
 			}
 
 			return scheduledLinksCount;
-		}
-
-		private byte[] CalculateHash(string s)
-		{
-			return SHA256Managed.Create().ComputeHash(Encoding.UTF8.GetBytes(s));
 		}
 	}
 
@@ -179,6 +193,7 @@ namespace NetCrawler.Core
 	public class CrawlUrl
 	{
 		public byte[] Hash { get; set; }
+		public string Base64Hash { get; set; }
 
 		private string url;
 		public string Url

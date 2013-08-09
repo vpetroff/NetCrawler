@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace NetCrawler.Core
@@ -7,8 +8,9 @@ namespace NetCrawler.Core
 	{
 		Task<CrawlResult> Schedule(Website website);
 		int Schedule(IEnumerable<string> urls);
-		event PageCrawledEventHandler PageCrawledEventHandler;
-	}
 
-	public delegate void PageCrawledEventHandler(object sender, PageCrawlResult pageCrawlResult);
+		event Action<PageCrawlResult> PageCrawled;
+		event Action<Website> WebsiteScheduled;
+		event Action<CrawlUrl> PageScheduled;
+	}
 }

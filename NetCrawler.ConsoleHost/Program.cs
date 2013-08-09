@@ -1,41 +1,35 @@
 ﻿using System;
-using System.Threading.Tasks;
-using NUnit.Framework;
 using NetCrawler.Core;
 using NetCrawler.Core.Configuration;
-using FluentAssertions;
 using NetCrawler.RavenDb;
 using NetCrawler.RavenDb.Persistence;
 
-namespace NetCrawler.Tests
+namespace NetCrawler.ConsoleHost
 {
-	[TestFixture]
-	public class WebsiteCrawlerFixture
+	class Program
 	{
-		[Test]
-		public void Should_crawl_website()
+		static void Main(string[] args)
 		{
+			var url = "http://www.karenmillen.com/";
+			if (args.Length > 1)
+				url = args[1];
+
 			var configuration = new Configuration();
 			var pageDownloader = new PageDownloader(configuration);
 			var htmlParser = new HtmlParser();
 			var pageCrawler = new SinglePageCrawler(htmlParser, pageDownloader);
 
+			var urlHasher = new UrlHasher();
+
 			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
 			var persister = new RavenDbCrawlPersister(documentStore);
 
-			var urlHasher = new UrlHasher();
 			var websiteCrawler = new WebsiteCrawler(new LocalCrawlScheduler(urlHasher, configuration, pageCrawler), persister);
 
 			var task = websiteCrawler.RunAsync(new Website
-				{
-					RootUrl = "http://www.karenmillen.com/"
-				});
-
-//			task.Wait(new TimeSpan(0, 10, 0));
-//			task.Wait(new TimeSpan(0, 2, 0));
-			task.Wait();
-
-			task.Status.ShouldBeEquivalentTo(TaskStatus.RanToCompletion);
+			{
+				RootUrl = url
+			});
 
 			var result = task.Result;
 
