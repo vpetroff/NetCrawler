@@ -20,7 +20,7 @@ namespace NetCrawler.RavenDb
 		{
 			using (var session = documentStore.OpenSession())
 			{
-				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Base64UrlHash:{0}", pageCrawlResult.CrawlUrl.Base64Hash)).FirstOrDefault() ?? new Page();
+				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Base64UrlHash:\"{0}\"", pageCrawlResult.CrawlUrl.Base64Hash)).FirstOrDefault() ?? new Page();
 
 				existing.WebsiteUrl = pageCrawlResult.CrawlUrl.Website.Website.RootUrl;
 				existing.Url = pageCrawlResult.CrawlUrl.Url;

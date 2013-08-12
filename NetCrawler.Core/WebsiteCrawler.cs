@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using log4net;
 
@@ -60,6 +62,11 @@ namespace NetCrawler.Core
 						Log.Error(ex);
 					}
 				};
+		}
+
+		public Task<CrawlResult[]> RunAsync(IEnumerable<Website> targets)
+		{
+			return Task.WhenAll(targets.Select(RunAsync));
 		}
 
 		public async Task<CrawlResult> RunAsync(Website target)

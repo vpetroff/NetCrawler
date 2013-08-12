@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NetCrawler.Core;
 using NetCrawler.Core.Configuration;
 using NetCrawler.RavenDb;
@@ -33,15 +34,27 @@ namespace NetCrawler.ConsoleHost
 
 			var websiteCrawler = new WebsiteCrawler(new LocalCrawlScheduler(urlHasher, configuration, pageCrawler), persister);
 
-			var task = websiteCrawler.RunAsync(new Website
-			{
-				RootUrl = url,
-				MaxConcurrentConnections = 100
+			var task = websiteCrawler.RunAsync(new [] {
+/*				new Website
+				{
+					RootUrl = "http://www.karenmillen.com/",
+					MaxConcurrentConnections = 50
+				},*/
+				new Website
+				{
+					RootUrl = "http://uk.tommy.com/",
+					MaxConcurrentConnections = 50
+				},
+				new Website
+				{
+					RootUrl = "http://www.houseoffraser.co.uk/",
+					MaxConcurrentConnections = 50
+				},
 			});
 
 			var result = task.Result;
 
-			log.InfoFormat("Crawl completed: {0} urls crawled in {1}", result.NumberOfPagesCrawled, (result.CrawlEnded - result.CrawlStarted).ToString());
+			log.InfoFormat("Crawl completed: {0} urls crawled in {1}", result.Sum(x => x.NumberOfPagesCrawled), (result.Max(x => x.CrawlEnded) - result.Min(x => x.CrawlStarted)).ToString());
 		}
 	}
 }
