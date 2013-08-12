@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using log4net;
 
 namespace NetCrawler.Core
 {
@@ -9,6 +10,8 @@ namespace NetCrawler.Core
 		private readonly ICrawlScheduler crawlScheduler;
 		private readonly ICrawlPersister crawlPersister;
 		private readonly ConcurrentDictionary<byte[], CrawlUrl> urls = new ConcurrentDictionary<byte[], CrawlUrl>(); // {hash, url}
+
+		private static readonly ILog Log = LogManager.GetLogger(typeof(WebsiteCrawler));
 
 		public WebsiteCrawler(ICrawlScheduler crawlScheduler, ICrawlPersister crawlPersister)
 		{
@@ -19,7 +22,7 @@ namespace NetCrawler.Core
 				{
 					urls.TryAdd(crawlUrl.Hash, crawlUrl);
 
-					Console.WriteLine("Scheduled '{0}' - total '{1}'", crawlUrl.Url, urls.Count);
+					Log.InfoFormat("Scheduled '{0}' - total '{1}'", crawlUrl.Url, urls.Count);
 				};
 
 			crawlScheduler.PageCrawled += crawlResult =>
@@ -29,7 +32,7 @@ namespace NetCrawler.Core
 						CrawlUrl url;
 						urls.TryRemove(crawlResult.CrawlUrl.Hash, out url);
 
-						Console.WriteLine("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urls.Count);
+						Log.InfoFormat("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urls.Count);
 						crawlPersister.Save(crawlResult);
 
 						crawlResult.CrawlUrl.Website.Website.LastVisit = DateTimeOffset.Now;
@@ -37,7 +40,7 @@ namespace NetCrawler.Core
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine(ex.Message);
+						Log.Error(ex);
 					}
 				};
 
@@ -45,7 +48,8 @@ namespace NetCrawler.Core
 				{
 					try
 					{
-						Console.WriteLine("Added website " + website.RootUrl);
+						Log.InfoFormat("Added website {0}", website.RootUrl);
+
 						website.LastCrawlStartedAt = DateTimeOffset.Now;
 						website.PagesCrawled = 0;
 
@@ -53,7 +57,7 @@ namespace NetCrawler.Core
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine(ex.Message);
+						Log.Error(ex);
 					}
 				};
 		}
@@ -74,7 +78,7 @@ namespace NetCrawler.Core
 		{
 			try
 			{
-				Console.WriteLine("Finished crawl for website " + website.RootUrl);
+				Log.InfoFormat("Finished crawl for website {0}", website.RootUrl);
 				website.LastCrawlEndedAt = website.LastVisit;
 				website.PagesCrawled = result.NumberOfPagesCrawled;
 
@@ -82,7 +86,7 @@ namespace NetCrawler.Core
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
+				Log.Error(ex);
 			}
 		}
 	}

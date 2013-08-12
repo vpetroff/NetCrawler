@@ -3,6 +3,8 @@ using NetCrawler.Core;
 using NetCrawler.Core.Configuration;
 using NetCrawler.RavenDb;
 using NetCrawler.RavenDb.Persistence;
+using log4net;
+using log4net.Config;
 
 namespace NetCrawler.ConsoleHost
 {
@@ -10,6 +12,10 @@ namespace NetCrawler.ConsoleHost
 	{
 		static void Main(string[] args)
 		{
+			XmlConfigurator.Configure();
+
+			var log = LogManager.GetLogger(typeof (Program));
+
 			var url = "http://www.karenmillen.com/";
 			if (args.Length > 1)
 				url = args[1];
@@ -35,7 +41,7 @@ namespace NetCrawler.ConsoleHost
 
 			var result = task.Result;
 
-			Console.WriteLine("Crawl completed: {0} urls crawled in {1}", result.NumberOfPagesCrawled, (result.CrawlEnded - result.CrawlStarted).ToString());
+			log.InfoFormat("Crawl completed: {0} urls crawled in {1}", result.NumberOfPagesCrawled, (result.CrawlEnded - result.CrawlStarted).ToString());
 		}
 	}
 }

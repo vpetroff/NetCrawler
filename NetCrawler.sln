@@ -18,6 +18,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCrawler.RavenDb", "NetCr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCrawler.ConsoleHost", "NetCrawler.ConsoleHost\NetCrawler.ConsoleHost.csproj", "{9FB5FAE3-4BBD-4DF2-B2EC-77778F60A20D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosts", "Hosts", "{EA12A91E-7DD7-4886-A2F1-1625E328C0B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCrawler.ServiceHost", "NetCrawler.ServiceHost\NetCrawler.ServiceHost.csproj", "{4A7C4093-D3B2-4029-95FC-F10D743EC100}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,11 +44,17 @@ Global
 		{9FB5FAE3-4BBD-4DF2-B2EC-77778F60A20D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FB5FAE3-4BBD-4DF2-B2EC-77778F60A20D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FB5FAE3-4BBD-4DF2-B2EC-77778F60A20D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A7C4093-D3B2-4029-95FC-F10D743EC100}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A7C4093-D3B2-4029-95FC-F10D743EC100}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A7C4093-D3B2-4029-95FC-F10D743EC100}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A7C4093-D3B2-4029-95FC-F10D743EC100}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8C5FCD79-8C89-4B17-BDC4-3034FF0189D3} = {0212CBC2-2E54-4302-851E-7B4DCBCF04A8}
+		{9FB5FAE3-4BBD-4DF2-B2EC-77778F60A20D} = {EA12A91E-7DD7-4886-A2F1-1625E328C0B4}
+		{4A7C4093-D3B2-4029-95FC-F10D743EC100} = {EA12A91E-7DD7-4886-A2F1-1625E328C0B4}
 	EndGlobalSection
 EndGlobal

@@ -4,12 +4,14 @@ using System.IO;
 using System.Net;
 using System.Net.Mime;
 using NetCrawler.Core.Configuration;
+using log4net;
 
 namespace NetCrawler.Core
 {
 	public class PageDownloader : IPageDownloader
 	{
 		private readonly IConfiguration configuration;
+		private static readonly ILog Log = LogManager.GetLogger(typeof (PageDownloader));
 
 		public PageDownloader(IConfiguration configuration)
 		{
@@ -47,7 +49,7 @@ namespace NetCrawler.Core
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
+				Log.Error(ex);
 			}
 
 			latencyTimer.Stop();
