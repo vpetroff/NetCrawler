@@ -31,6 +31,9 @@ namespace NetCrawler.Core
 
 						Console.WriteLine("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urls.Count);
 						crawlPersister.Save(crawlResult);
+
+						crawlResult.CrawlUrl.Website.Website.LastVisit = DateTimeOffset.Now;
+						crawlPersister.Save(crawlResult.CrawlUrl.Website.Website);
 					}
 					catch (Exception ex)
 					{
@@ -43,6 +46,9 @@ namespace NetCrawler.Core
 					try
 					{
 						Console.WriteLine("Added website " + website.RootUrl);
+						website.LastCrawlStartedAt = DateTimeOffset.Now;
+						website.PagesCrawled = 0;
+
 						crawlPersister.Save(website);
 					}
 					catch (Exception ex)
@@ -58,17 +64,20 @@ namespace NetCrawler.Core
 				{
 					target.LastVisit = DateTimeOffset.Now;
 
-					WebsiteCrawlFinished(target);
+					WebsiteCrawlFinished(target, t.Result);
 
 					return t.Result;
 				});
 		}
 
-		private void WebsiteCrawlFinished(Website website)
+		private void WebsiteCrawlFinished(Website website, CrawlResult result)
 		{
 			try
 			{
 				Console.WriteLine("Finished crawl for website " + website.RootUrl);
+				website.LastCrawlEndedAt = website.LastVisit;
+				website.PagesCrawled = result.NumberOfPagesCrawled;
+
 				crawlPersister.Save(website);
 			}
 			catch (Exception ex)

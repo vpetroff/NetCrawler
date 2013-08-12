@@ -28,7 +28,8 @@ namespace NetCrawler.Tests
 
 			var task = websiteCrawler.RunAsync(new Website
 				{
-					RootUrl = "http://www.karenmillen.com/"
+					RootUrl = "http://www.karenmillen.com/",
+					MaxConcurrentConnections = 100
 				});
 
 //			task.Wait(new TimeSpan(0, 10, 0));

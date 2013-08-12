@@ -20,7 +20,7 @@ namespace NetCrawler.RavenDb
 		{
 			using (var session = documentStore.OpenSession())
 			{
-				var existing = session.Query<Page, PagesToCrawlByUrl>().Where(x => x.Base64UrlHash == pageCrawlResult.CrawlUrl.Base64Hash).FirstOrDefault() ?? new Page();
+				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Base64UrlHash:{0}", pageCrawlResult.CrawlUrl.Base64Hash)).FirstOrDefault() ?? new Page();
 
 				existing.WebsiteUrl = pageCrawlResult.CrawlUrl.Website.Website.RootUrl;
 				existing.Url = pageCrawlResult.CrawlUrl.Url;
@@ -40,6 +40,13 @@ namespace NetCrawler.RavenDb
 				var existing = session.Query<Website>().Where(w => w.RootUrl == website.RootUrl).FirstOrDefault() ?? website;
 				
 				existing.LastVisit = website.LastVisit;
+				existing.LastCrawlStartedAt = website.LastCrawlStartedAt;
+				existing.LastCrawlEndedAt = website.LastCrawlEndedAt;
+				existing.PagesCrawled = website.PagesCrawled;
+
+				existing.MaxConcurrentConnections = website.MaxConcurrentConnections;
+				existing.IntervalBetweenVisits = website.IntervalBetweenVisits;
+				existing.FollowExternalLinks = website.FollowExternalLinks;
 
 				session.Store(existing);
 				session.SaveChanges();

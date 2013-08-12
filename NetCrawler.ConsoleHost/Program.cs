@@ -21,14 +21,16 @@ namespace NetCrawler.ConsoleHost
 
 			var urlHasher = new UrlHasher();
 
-			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
+//			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
+			var documentStore = new DocumentStoreInitializer("http://SLB-4B6WZN1:8080", "NetCrawler").DocumentStore;
 			var persister = new RavenDbCrawlPersister(documentStore);
 
 			var websiteCrawler = new WebsiteCrawler(new LocalCrawlScheduler(urlHasher, configuration, pageCrawler), persister);
 
 			var task = websiteCrawler.RunAsync(new Website
 			{
-				RootUrl = url
+				RootUrl = url,
+				MaxConcurrentConnections = 100
 			});
 
 			var result = task.Result;

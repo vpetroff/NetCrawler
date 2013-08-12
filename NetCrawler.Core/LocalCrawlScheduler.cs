@@ -102,7 +102,7 @@ namespace NetCrawler.Core
 							MaxDegreeOfParallelism =
 								website.MaxConcurrentConnections > 0
 									? website.MaxConcurrentConnections
-									: configuration.MaxConcurrentConnectionsPerWebsite
+									: configuration.MaxConcurrentConnectionsPerWebsite,
 						});
 
 				processingBlock.LinkTo(schedulingBlock);
@@ -139,7 +139,7 @@ namespace NetCrawler.Core
 					var crawlUrl = new CrawlUrl
 						{
 							Hash = hash.Key,
-							Base64Hash = Convert.ToBase64String(hash.Key),
+							Base64Hash = Convert.ToBase64String(hash.Key).Replace('+', '-').Replace('/', '_'),
 							Url = hash.Value,
 						};
 
