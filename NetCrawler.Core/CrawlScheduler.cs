@@ -10,21 +10,22 @@ using NetCrawler.Core.Configuration;
 
 namespace NetCrawler.Core
 {
-	public class LocalCrawlScheduler : ICrawlScheduler
+	public class CrawlScheduler : ICrawlScheduler
 	{
 		private readonly IUrlHasher urlHasher;
 		private readonly IConfiguration configuration;
 		private readonly ISinglePageCrawler pageCrawler;
-		private readonly ConcurrentDictionary<byte[], CrawlUrl> urls = new ConcurrentDictionary<byte[], CrawlUrl>(); // {hash, url}
+		private readonly ICrawlUrlRepository crawlUrlRepository;
 		private readonly ConcurrentBag<WebsiteBlock> websites = new ConcurrentBag<WebsiteBlock>();
 		private readonly object websiteLock = new object();
 		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
 
-		public LocalCrawlScheduler(IUrlHasher urlHasher, IConfiguration configuration, ISinglePageCrawler pageCrawler)
+		public CrawlScheduler(IUrlHasher urlHasher, IConfiguration configuration, ISinglePageCrawler pageCrawler, ICrawlUrlRepository crawlUrlRepository)
 		{
 			this.urlHasher = urlHasher;
 			this.configuration = configuration;
 			this.pageCrawler = pageCrawler;
+			this.crawlUrlRepository = crawlUrlRepository;
 
 			schedulingBlock = new ActionBlock<PageCrawlResult>(result =>
 				{
@@ -126,12 +127,12 @@ namespace NetCrawler.Core
 
 		public int Schedule(IEnumerable<string> crawlUrls)
 		{
-			var hashes = new Dictionary<byte[], string>(crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).ToDictionary(urlHasher.CalculateHash));
+			var hashes = new Dictionary<string, string>(crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).ToDictionary(urlHasher.CalculateHashAsString));
 			var scheduledLinksCount = 0;
 
 			foreach (var hash in hashes)
 			{
-				if (urls.Keys.Any(x => hash.Key.SequenceEqual(x)))
+				if (crawlUrlRepository.Contains(hash.Key))
 					continue;
 
 				try
@@ -139,7 +140,6 @@ namespace NetCrawler.Core
 					var crawlUrl = new CrawlUrl
 						{
 							Hash = hash.Key,
-							Base64Hash = Convert.ToBase64String(hash.Key).Replace('+', '-').Replace('/', '_'),
 							Url = hash.Value,
 						};
 
@@ -147,7 +147,7 @@ namespace NetCrawler.Core
 					if (website != null)
 					{
 						crawlUrl.Website = website;
-						if (urls.TryAdd(hash.Key, crawlUrl))
+						if (crawlUrlRepository.TryAdd(hash.Key, crawlUrl))
 						{
 							Interlocked.Increment(ref website.UrlsToProcessCount);
 							Interlocked.Increment(ref scheduledLinksCount);
@@ -165,49 +165,5 @@ namespace NetCrawler.Core
 
 			return scheduledLinksCount;
 		}
-	}
-
-	public class WebsiteBlock
-	{
-		public int UrlsToProcessCount;
-		public int ProcessedUrlsCount;
-
-		public Website Website { get; set; }
-		public ITargetBlock<CrawlUrl> ProcessingBlock { get; set; }
-
-		public TaskCompletionSource<CrawlResult> CompletionSource { get; set; }
-
-		public CrawlResult CrawlResult { get; set; }
-
-		public void Complete()
-		{
-			ProcessingBlock.Complete();
-
-			CrawlResult.NumberOfPagesCrawled = ProcessedUrlsCount;
-			CrawlResult.CrawlEnded = DateTime.Now;
-
-			CompletionSource.SetResult(CrawlResult);
-		}
-	}
-
-	public class CrawlUrl
-	{
-		public byte[] Hash { get; set; }
-		public string Base64Hash { get; set; }
-
-		private string url;
-		public string Url
-		{
-			get { return url; }
-			set
-			{
-				url = value;
-				Uri = new Uri(url);
-			}
-		}
-
-		public Uri Uri { get; private set; }
-
-		public WebsiteBlock Website { get; set; }
 	}
 }

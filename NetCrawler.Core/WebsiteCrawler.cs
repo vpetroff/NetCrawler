@@ -11,7 +11,7 @@ namespace NetCrawler.Core
 	{
 		private readonly ICrawlScheduler crawlScheduler;
 		private readonly ICrawlPersister crawlPersister;
-		private readonly ConcurrentDictionary<byte[], CrawlUrl> urls = new ConcurrentDictionary<byte[], CrawlUrl>(); // {hash, url}
+		private readonly ConcurrentDictionary<string, CrawlUrl> urls = new ConcurrentDictionary<string, CrawlUrl>(); // {hash, url}
 
 		private static readonly ILog Log = LogManager.GetLogger(typeof(WebsiteCrawler));
 

@@ -20,11 +20,11 @@ namespace NetCrawler.RavenDb
 		{
 			using (var session = documentStore.OpenSession())
 			{
-				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Base64UrlHash:\"{0}\"", pageCrawlResult.CrawlUrl.Base64Hash)).FirstOrDefault() ?? new Page();
+				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Hash:\"{0}\"", pageCrawlResult.CrawlUrl.Hash)).FirstOrDefault() ?? new Page();
 
 				existing.WebsiteUrl = pageCrawlResult.CrawlUrl.Website.Website.RootUrl;
 				existing.Url = pageCrawlResult.CrawlUrl.Url;
-				existing.Base64UrlHash = pageCrawlResult.CrawlUrl.Base64Hash;
+				existing.Hash = pageCrawlResult.CrawlUrl.Hash;
 				existing.Contents = pageCrawlResult.Contents;
 				existing.CrawledAt = pageCrawlResult.CrawlEndedAt;
 
@@ -58,7 +58,7 @@ namespace NetCrawler.RavenDb
 	{
 		public string WebsiteUrl { get; set; }
 		public string Url { get; set; }
-		public string Base64UrlHash { get; set; }
+		public string Hash { get; set; }
 		public string Contents { get; set; }
 		public DateTimeOffset CrawledAt { get; set; }
 

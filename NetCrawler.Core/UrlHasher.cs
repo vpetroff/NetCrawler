@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace NetCrawler.Core
@@ -15,6 +16,11 @@ namespace NetCrawler.Core
 		public byte[] CalculateHash(string url)
 		{
 			return Sha256Instance.ComputeHash(Encoding.UTF8.GetBytes(url));
+		}
+
+		public string CalculateHashAsString(string url)
+		{
+			return Convert.ToBase64String(CalculateHash(url)).Replace('+', '-').Replace('/', '_');
 		}
 	}
 }

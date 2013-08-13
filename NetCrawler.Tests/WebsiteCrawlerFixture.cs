@@ -24,7 +24,8 @@ namespace NetCrawler.Tests
 			var persister = new RavenDbCrawlPersister(documentStore);
 
 			var urlHasher = new UrlHasher();
-			var websiteCrawler = new WebsiteCrawler(new LocalCrawlScheduler(urlHasher, configuration, pageCrawler), persister);
+			var crawlUrlRepository = new InMemoryCrawlUrlRepository();
+			var websiteCrawler = new WebsiteCrawler(new CrawlScheduler(urlHasher, configuration, pageCrawler, crawlUrlRepository), persister);
 
 			var task = websiteCrawler.RunAsync(new Website
 				{

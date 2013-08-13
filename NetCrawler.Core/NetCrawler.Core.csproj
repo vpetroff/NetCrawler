@@ -53,19 +53,23 @@
   <ItemGroup>
     <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="Configuration\IConfiguration.cs" />
+    <Compile Include="CrawlUrl.cs" />
     <Compile Include="HtmlParser.cs" />
     <Compile Include="ICrawlScheduler.cs" />
+    <Compile Include="ICrawlUrlRepository.cs" />
     <Compile Include="IHtmlParser.cs" />
+    <Compile Include="InMemoryCrawlUrlRepository.cs" />
     <Compile Include="IPageDownloader.cs" />
     <Compile Include="ICrawlPersister.cs" />
     <Compile Include="ISinglePageCrawler.cs" />
     <Compile Include="IUrlHasher.cs" />
-    <Compile Include="LocalCrawlScheduler.cs" />
+    <Compile Include="CrawlScheduler.cs" />
     <Compile Include="PageCrawlResult.cs" />
     <Compile Include="PageDownloader.cs" />
     <Compile Include="PageDownloadResponse.cs" />
     <Compile Include="SinglePageCrawler.cs" />
     <Compile Include="UrlHasher.cs" />
+    <Compile Include="WebsiteBlock.cs" />
     <Compile Include="WebsiteCrawler.cs" />
     <Compile Include="CrawlResult.cs" />
     <Compile Include="IWebsiteCrawler.cs" />
