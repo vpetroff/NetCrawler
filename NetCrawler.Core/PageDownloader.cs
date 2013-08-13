@@ -18,7 +18,7 @@ namespace NetCrawler.Core
 			this.configuration = configuration;
 		}
 
-		public PageDownloadResponse Download(string url)
+		public PageDownloadResponse Download(Uri url)
 		{
 			var downloadResponse = new PageDownloadResponse();
 			var latencyTimer = new Stopwatch();

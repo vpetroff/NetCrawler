@@ -16,7 +16,8 @@ namespace NetCrawler.Core
 		private readonly IConfiguration configuration;
 		private readonly ISinglePageCrawler pageCrawler;
 		private readonly ICrawlUrlRepository crawlUrlRepository;
-		private readonly ConcurrentBag<WebsiteBlock> websites = new ConcurrentBag<WebsiteBlock>();
+		private readonly ConcurrentBag<WebsiteDefinition> websiteDefinitions = new ConcurrentBag<WebsiteDefinition>();
+		private readonly ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition> websiteProcessingDefinitions = new ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition>();
 		private readonly object websiteLock = new object();
 		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
 
@@ -29,7 +30,9 @@ namespace NetCrawler.Core
 
 			schedulingBlock = new ActionBlock<PageCrawlResult>(result =>
 				{
-					Interlocked.Increment(ref result.CrawlUrl.Website.ProcessedUrlsCount);
+					var websiteDefinition = result.CrawlUrl.WebsiteDefinition;
+
+					Interlocked.Increment(ref websiteDefinition.ProcessedUrlsCount);
 
 					RaisePageCrawled(result);
 					
@@ -42,8 +45,10 @@ namespace NetCrawler.Core
 
 					if (scheduledLinksCount == 0)
 					{
-						if (result.CrawlUrl.Website.UrlsToProcessCount == result.CrawlUrl.Website.ProcessedUrlsCount)
-							result.CrawlUrl.Website.Complete();
+						if (websiteDefinition.UrlsToProcessCount == websiteDefinition.ProcessedUrlsCount)
+						{
+							websiteProcessingDefinitions[websiteDefinition].Complete();
+						}
 					}
 				});
 		}
@@ -75,9 +80,9 @@ namespace NetCrawler.Core
 
 		public Task<CrawlResult> Schedule(Website website)
 		{
-			var existing = websites.FirstOrDefault(x => x.Website == website);
+			var existing = websiteDefinitions.FirstOrDefault(x => x.Website == website);
 			if (existing != null)
-				return existing.CompletionSource.Task;
+				return websiteProcessingDefinitions[existing].CompletionSource.Task;
 
 			if (website == null || string.IsNullOrWhiteSpace(website.RootUrl))
 			{
@@ -89,45 +94,59 @@ namespace NetCrawler.Core
 
 			website.RootUrl = website.RootUrl.Split('#')[0].TrimEnd('/');
 
-			WebsiteBlock websiteBlock;
+			WebsiteProcessingDefinition websiteProcessingDefinition;
 			lock (websiteLock)
 			{
-				var processingBlock = new TransformBlock<CrawlUrl, PageCrawlResult>(crawlUrl =>
-					{
-						var result = pageCrawler.Crawl(crawlUrl.Url);
-						result.CrawlUrl = crawlUrl;
+				var processingBlock = CreateProcessingBlock(website);
 
-						return result;
-					}, new ExecutionDataflowBlockOptions
-						{
-							MaxDegreeOfParallelism =
-								website.MaxConcurrentConnections > 0
-									? website.MaxConcurrentConnections
-									: configuration.MaxConcurrentConnectionsPerWebsite,
-						});
-
-				processingBlock.LinkTo(schedulingBlock);
-				
-				websiteBlock = new WebsiteBlock
+				var websiteDefinition = new WebsiteDefinition
 					{
 						Website = website, 
 						CrawlResult = new CrawlResult(),
-						ProcessingBlock = processingBlock, 
+					};
+				
+				websiteProcessingDefinition = new WebsiteProcessingDefinition(websiteDefinition)
+					{
+						ProcessingBlock = processingBlock,
 						CompletionSource = new TaskCompletionSource<CrawlResult>()
 					};
-				websites.Add(websiteBlock);
+
+				if (websiteProcessingDefinitions.TryAdd(websiteDefinition, websiteProcessingDefinition))
+				{
+					websiteDefinitions.Add(websiteDefinition);
+				}
 			}
 
 			RaiseWebsiteScheduled(website);
 
 			Schedule(new[] { website.RootUrl });
 
-			return websiteBlock.CompletionSource.Task;
+			return websiteProcessingDefinition.CompletionSource.Task;
+		}
+
+		private TransformBlock<CrawlUrl, PageCrawlResult> CreateProcessingBlock(Website website)
+		{
+			var processingBlock = new TransformBlock<CrawlUrl, PageCrawlResult>(crawlUrl =>
+				{
+					var result = pageCrawler.Crawl(crawlUrl.Uri);
+					result.CrawlUrl = crawlUrl;
+
+					return result;
+				}, new ExecutionDataflowBlockOptions
+					{
+						MaxDegreeOfParallelism =
+							website.MaxConcurrentConnections > 0
+								? website.MaxConcurrentConnections
+								: configuration.MaxConcurrentConnectionsPerWebsite,
+					});
+
+			processingBlock.LinkTo(schedulingBlock);
+			return processingBlock;
 		}
 
 		public int Schedule(IEnumerable<string> crawlUrls)
 		{
-			var hashes = new Dictionary<string, string>(crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).ToDictionary(urlHasher.CalculateHashAsString));
+			var hashes = crawlUrls.Select(x => x.Split('#')[0].TrimEnd('/')).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToDictionary(urlHasher.CalculateHashAsString);
 			var scheduledLinksCount = 0;
 
 			foreach (var hash in hashes)
@@ -143,15 +162,16 @@ namespace NetCrawler.Core
 							Url = hash.Value,
 						};
 
-					var website = websites.FirstOrDefault(x => x.Website.IsRelativeUrl(crawlUrl));
-					if (website != null)
+					var websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(crawlUrl));
+					if (websiteDefinition != null)
 					{
-						crawlUrl.Website = website;
+						crawlUrl.WebsiteDefinition = websiteDefinition;
 						if (crawlUrlRepository.TryAdd(hash.Key, crawlUrl))
 						{
-							Interlocked.Increment(ref website.UrlsToProcessCount);
+							Interlocked.Increment(ref websiteDefinition.UrlsToProcessCount);
 							Interlocked.Increment(ref scheduledLinksCount);
-							website.ProcessingBlock.Post(crawlUrl);
+
+							websiteProcessingDefinitions[websiteDefinition].ProcessingBlock.Post(crawlUrl);
 
 							RaisePageScheduled(crawlUrl);
 						}

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 
@@ -11,7 +11,7 @@ namespace NetCrawler.Core
 	{
 		private readonly ICrawlScheduler crawlScheduler;
 		private readonly ICrawlPersister crawlPersister;
-		private readonly ConcurrentDictionary<string, CrawlUrl> urls = new ConcurrentDictionary<string, CrawlUrl>(); // {hash, url}
+		private int urlsCount;
 
 		private static readonly ILog Log = LogManager.GetLogger(typeof(WebsiteCrawler));
 
@@ -22,23 +22,22 @@ namespace NetCrawler.Core
 
 			crawlScheduler.PageScheduled += crawlUrl =>
 				{
-					urls.TryAdd(crawlUrl.Hash, crawlUrl);
+					Interlocked.Increment(ref urlsCount);
 
-					Log.InfoFormat("Scheduled '{0}' - total '{1}'", crawlUrl.Url, urls.Count);
+					Log.InfoFormat("Scheduled '{0}' - total '{1}'", crawlUrl.Url, urlsCount);
 				};
 
 			crawlScheduler.PageCrawled += crawlResult =>
 				{
 					try
 					{
-						CrawlUrl url;
-						urls.TryRemove(crawlResult.CrawlUrl.Hash, out url);
+						Interlocked.Decrement(ref urlsCount);
 
-						Log.InfoFormat("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urls.Count);
+						Log.InfoFormat("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urlsCount);
 						crawlPersister.Save(crawlResult);
 
-						crawlResult.CrawlUrl.Website.Website.LastVisit = DateTimeOffset.Now;
-						crawlPersister.Save(crawlResult.CrawlUrl.Website.Website);
+						crawlResult.CrawlUrl.WebsiteDefinition.Website.LastVisit = DateTimeOffset.Now;
+						crawlPersister.Save(crawlResult.CrawlUrl.WebsiteDefinition.Website);
 					}
 					catch (Exception ex)
 					{

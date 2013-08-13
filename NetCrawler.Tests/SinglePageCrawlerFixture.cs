@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using NetCrawler.Core;
 using NetCrawler.Core.Configuration;
 
@@ -16,7 +17,7 @@ namespace NetCrawler.Tests
 
 			var crawler = new SinglePageCrawler(htmlParser, pageDownloader);
 
-			var result = crawler.Crawl("http://vladpetroff.com");
+			var result = crawler.Crawl(new Uri("http://vladpetroff.com"));
 		}
 	}
 }

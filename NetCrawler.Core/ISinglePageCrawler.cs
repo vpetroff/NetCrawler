@@ -1,7 +1,9 @@
-﻿namespace NetCrawler.Core
+﻿using System;
+
+namespace NetCrawler.Core
 {
 	public interface ISinglePageCrawler
 	{
-		PageCrawlResult Crawl(string url);
+		PageCrawlResult Crawl(Uri url);
 	}
 }

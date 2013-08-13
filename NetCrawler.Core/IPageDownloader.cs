@@ -1,7 +1,9 @@
-﻿namespace NetCrawler.Core
+﻿using System;
+
+namespace NetCrawler.Core
 {
 	public interface IPageDownloader
 	{
-		PageDownloadResponse Download(string url);
+		PageDownloadResponse Download(Uri url);
 	}
 }

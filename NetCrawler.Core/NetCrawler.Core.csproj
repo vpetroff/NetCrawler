@@ -38,6 +38,9 @@
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Raven.Abstractions-4.5">
+      <HintPath>..\packages\RavenDB.Client.2.5.2666\lib\net45\Raven.Abstractions-4.5.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -69,12 +72,13 @@
     <Compile Include="PageDownloadResponse.cs" />
     <Compile Include="SinglePageCrawler.cs" />
     <Compile Include="UrlHasher.cs" />
-    <Compile Include="WebsiteBlock.cs" />
+    <Compile Include="WebsiteDefinition.cs" />
     <Compile Include="WebsiteCrawler.cs" />
     <Compile Include="CrawlResult.cs" />
     <Compile Include="IWebsiteCrawler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Website.cs" />
+    <Compile Include="WebsiteProcessingDefinition.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

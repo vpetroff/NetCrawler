@@ -19,6 +19,6 @@ namespace NetCrawler.Core
 
 		public Uri Uri { get; private set; }
 
-		public WebsiteBlock Website { get; set; }
+		public WebsiteDefinition WebsiteDefinition { get; set; }
 	}
 }

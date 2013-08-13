@@ -1,34 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using CsQuery;
+using log4net;
 
 namespace NetCrawler.Core
 {
 	public class HtmlParser : IHtmlParser
 	{
-		public IEnumerable<string> ExtractLinks(string pageUrl, string contents)
+		private static readonly ILog Log = LogManager.GetLogger(typeof (HtmlParser));
+
+		public IEnumerable<string> ExtractLinks(Uri pageUri, string contents)
 		{
 			var dom = CQ.Create(contents);
-
-			var baseUri = new Uri(pageUrl, UriKind.Absolute);
 
 			var pageLinks = new List<string>();
 			dom["a[href]"].Each(a =>
 				{
 					string href;
-					if (a.TryGetAttribute("href", out href) && !string.IsNullOrWhiteSpace(href))
+					if (!a.TryGetAttribute("href", out href) || string.IsNullOrWhiteSpace(href)) 
+						return;
+
+					try
 					{
-						try
-						{
-							var uri = new Uri(baseUri, href);
-							if (!pageLinks.Contains(uri.AbsoluteUri))
-								pageLinks.Add(uri.AbsoluteUri);
-						}
-						catch (Exception ex)
-						{
-							Debug.WriteLine(ex.Message);
-						}
+						var uri = new Uri(pageUri, href);
+						if (!pageLinks.Contains(uri.AbsoluteUri))
+							pageLinks.Add(uri.AbsoluteUri);
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex);
 					}
 				});
 

@@ -29,28 +29,29 @@ namespace NetCrawler.ConsoleHost
 
 			var urlHasher = new UrlHasher();
 
-//			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
-			var documentStore = new DocumentStoreInitializer("http://SLB-4B6WZN1:8080", "NetCrawler2").DocumentStore;
+			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
+//			var documentStore = new DocumentStoreInitializer("http://SLB-4B6WZN1:8080", "NetCrawler2").DocumentStore;
 			var persister = new RavenDbCrawlPersister(documentStore);
-			var crawlUrlRepository = new RedisCrawlUrlRepository();// new InMemoryCrawlUrlRepository();
+			var crawlUrlRepository = new InMemoryCrawlUrlRepository();
+//			var crawlUrlRepository = new RedisCrawlUrlRepository();
 
 			var websiteCrawler = new WebsiteCrawler(new CrawlScheduler(urlHasher, configuration, pageCrawler, crawlUrlRepository), persister);
 
 			var task = websiteCrawler.RunAsync(new [] {
-/*				new Website
+				new Website
 				{
 					RootUrl = "http://www.karenmillen.com/",
-					MaxConcurrentConnections = 50
-				},*/
+					MaxConcurrentConnections = 15
+				},
 				new Website
 				{
 					RootUrl = "http://uk.tommy.com/",
-					MaxConcurrentConnections = 50
+					MaxConcurrentConnections = 15
 				},
 				new Website
 				{
 					RootUrl = "http://www.houseoffraser.co.uk/",
-					MaxConcurrentConnections = 50
+					MaxConcurrentConnections = 15
 				},
 			});
 

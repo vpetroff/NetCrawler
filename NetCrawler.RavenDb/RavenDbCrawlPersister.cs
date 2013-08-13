@@ -22,7 +22,7 @@ namespace NetCrawler.RavenDb
 			{
 				var existing = session.Advanced.LuceneQuery<Page, PagesToCrawlByUrl>().Where(string.Format("Hash:\"{0}\"", pageCrawlResult.CrawlUrl.Hash)).FirstOrDefault() ?? new Page();
 
-				existing.WebsiteUrl = pageCrawlResult.CrawlUrl.Website.Website.RootUrl;
+				existing.WebsiteUrl = pageCrawlResult.CrawlUrl.WebsiteDefinition.Website.RootUrl;
 				existing.Url = pageCrawlResult.CrawlUrl.Url;
 				existing.Hash = pageCrawlResult.CrawlUrl.Hash;
 				existing.Contents = pageCrawlResult.Contents;

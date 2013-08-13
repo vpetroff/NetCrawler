@@ -10,7 +10,7 @@ namespace NetCrawler.RavenDb.Indexes
 		{
 			return new IndexDefinitionBuilder<Page>
 			{
-				Map = pages => from page in pages select new { page.Url, Base64UrlHash = page.Hash, page.WebsiteUrl, page.CrawledAt },
+				Map = pages => from page in pages select new { page.Url, Hash = page.Hash, page.WebsiteUrl, page.CrawledAt },
 				Indexes =
 						{
 							{x => x.Url, FieldIndexing.NotAnalyzed},

@@ -13,7 +13,7 @@ namespace NetCrawler.Core
 			this.pageDownloader = pageDownloader;
 		}
 
-		public PageCrawlResult Crawl(string url)
+		public PageCrawlResult Crawl(Uri url)
 		{
 			var crawlResult = new PageCrawlResult();
 

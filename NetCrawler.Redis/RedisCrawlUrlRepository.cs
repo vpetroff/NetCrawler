@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using NetCrawler.Core;
+﻿using NetCrawler.Core;
 using ServiceStack.Redis;
 
 namespace NetCrawler.Redis
@@ -12,6 +10,7 @@ namespace NetCrawler.Redis
 		public RedisCrawlUrlRepository()
 		{
 			client = new RedisClient("localhost");
+			client.FlushAll();
 		}
 
 		public bool Contains(string key)
