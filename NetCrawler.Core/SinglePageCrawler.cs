@@ -18,6 +18,7 @@ namespace NetCrawler.Core
 			var crawlResult = new PageCrawlResult();
 
 			var downloadResponse = pageDownloader.Download(url);
+			crawlResult.StatusCode = downloadResponse.StatusCode;
 
 			if (downloadResponse.IsSuccessful)
 			{
@@ -25,7 +26,7 @@ namespace NetCrawler.Core
 				crawlResult.Links = htmlParser.ExtractLinks(url, downloadResponse.Contents);
 			}
 
-			crawlResult.CrawlEndedAt = DateTimeOffset.UtcNow;
+			crawlResult.CrawlEndedAt = DateTimeOffset.Now;
 
 			return crawlResult;
 		}

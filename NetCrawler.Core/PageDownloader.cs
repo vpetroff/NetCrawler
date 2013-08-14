@@ -32,9 +32,9 @@ namespace NetCrawler.Core
 				request.UserAgent = configuration.UserAgent;
 				request.Accept = MediaTypeNames.Text.Html;
 
-				downloadResponse.HttpWebResponse = (HttpWebResponse)request.GetResponse();
+				var httpWebResponse = (HttpWebResponse)request.GetResponse();
 
-				var responseStream = downloadResponse.HttpWebResponse.GetResponseStream();
+				var responseStream = httpWebResponse.GetResponseStream();
 
 				if (responseStream != null)
 				{
@@ -45,6 +45,7 @@ namespace NetCrawler.Core
 					}
 				}
 
+				downloadResponse.StatusCode = httpWebResponse.StatusCode;
 				downloadResponse.IsSuccessful = true;
 			}
 			catch (Exception ex)

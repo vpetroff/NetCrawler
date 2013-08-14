@@ -12,15 +12,11 @@ namespace NetCrawler.ConsoleHost
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static void Main()
 		{
 			XmlConfigurator.Configure();
 
 			var log = LogManager.GetLogger(typeof (Program));
-
-			var url = "http://www.karenmillen.com/";
-			if (args.Length > 1)
-				url = args[1];
 
 			var configuration = new Configuration();
 			var pageDownloader = new PageDownloader(configuration);
@@ -29,9 +25,10 @@ namespace NetCrawler.ConsoleHost
 
 			var urlHasher = new UrlHasher();
 
-			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler").DocumentStore;
+			var documentStore = new DocumentStoreInitializer("http://localhost:8080", "NetCrawler2").DocumentStore;
 //			var documentStore = new DocumentStoreInitializer("http://SLB-4B6WZN1:8080", "NetCrawler2").DocumentStore;
 			var persister = new RavenDbCrawlPersister(documentStore);
+
 //			var crawlUrlRepository = new InMemoryCrawlUrlRepository();
 			var crawlUrlRepository = new RedisCrawlUrlRepository();
 

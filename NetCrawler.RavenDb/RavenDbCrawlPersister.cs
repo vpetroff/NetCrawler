@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using NetCrawler.Core;
 using NetCrawler.RavenDb.Indexes;
 using Raven.Client;
@@ -26,6 +27,7 @@ namespace NetCrawler.RavenDb
 				existing.Url = pageCrawlResult.CrawlUrl.Url;
 				existing.Hash = pageCrawlResult.CrawlUrl.Hash;
 				existing.Contents = pageCrawlResult.Contents;
+				existing.StatusCode = pageCrawlResult.StatusCode;
 				existing.CrawledAt = pageCrawlResult.CrawlEndedAt;
 
 				session.Store(existing);
@@ -61,6 +63,6 @@ namespace NetCrawler.RavenDb
 		public string Hash { get; set; }
 		public string Contents { get; set; }
 		public DateTimeOffset CrawledAt { get; set; }
-
+		public HttpStatusCode StatusCode { get; set; }
 	}
 }
