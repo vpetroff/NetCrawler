@@ -151,7 +151,7 @@ namespace NetCrawler.Core
 
 			foreach (var hash in hashes)
 			{
-				if (crawlUrlRepository.Contains(hash.Key))
+				if (crawlUrlRepository.IsKnown(hash.Key))
 					continue;
 
 				try

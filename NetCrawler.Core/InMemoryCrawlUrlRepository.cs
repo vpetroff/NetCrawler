@@ -6,7 +6,7 @@ namespace NetCrawler.Core
 	{
 		private readonly ConcurrentDictionary<string, CrawlUrl> urls = new ConcurrentDictionary<string, CrawlUrl>(); // {hash, url}
 
-		public bool Contains(string key)
+		public bool IsKnown(string key)
 		{
 			return urls.ContainsKey(key);
 		}

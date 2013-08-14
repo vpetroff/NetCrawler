@@ -2,7 +2,7 @@
 {
 	public interface ICrawlUrlRepository
 	{
-		bool Contains(string key);
+		bool IsKnown(string key);
 		bool TryAdd(string key, CrawlUrl crawlUrl);
 	}
 }

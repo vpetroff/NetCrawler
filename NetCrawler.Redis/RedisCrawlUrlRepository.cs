@@ -13,7 +13,7 @@ namespace NetCrawler.Redis
 			client.FlushAll();
 		}
 
-		public bool Contains(string key)
+		public bool IsKnown(string key)
 		{
 			return client.Exists(key) == 1;
 		}
