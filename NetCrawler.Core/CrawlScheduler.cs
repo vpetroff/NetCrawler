@@ -57,11 +57,6 @@ namespace NetCrawler.Core
 		{
 			lock (scheduleLock)
 			{
-/*
-				if (websiteDefinitions.Any(x => x.UrlsInProcess >= x.Website.MaxConcurrentConnections))
-					return;
-
-*/
 				WebsiteDefinition websiteDefinition;
 
 				do
@@ -70,7 +65,7 @@ namespace NetCrawler.Core
 					var next = crawlUrlRepository.PeekNext();
 					if (next != null)
 					{
-						websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(next) && x.UrlsInProcess < (x.Website.MaxConcurrentConnections + 10));
+						websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(next) && x.UrlsInProcess < (x.Website.MaxConcurrentConnections * 2));
 						if (websiteDefinition != null)
 						{
 							next = crawlUrlRepository.Next();
@@ -81,10 +76,6 @@ namespace NetCrawler.Core
 							RaisePageProcessing(next);
 
 							Interlocked.Increment(ref websiteDefinition.UrlsInProcess);
-/*
-							if (websiteDefinition.UrlsInProcess >= websiteDefinition.Website.MaxConcurrentConnections)
-								break;
-*/
 						}
 					}
 				} while (websiteDefinition != null);
@@ -190,7 +181,7 @@ namespace NetCrawler.Core
 
 			var persistBlock = new TransformBlock<PageCrawlResult, PageCrawlResult>(result =>
 				{
-					crawlUrlRepository.Done(result.CrawlUrl.Hash);
+					crawlUrlRepository.Done(result.CrawlUrl.Hash, result.CrawlUrl);
 
 					Interlocked.Decrement(ref result.CrawlUrl.WebsiteDefinition.UrlsInProcess);
 

@@ -24,11 +24,10 @@ namespace NetCrawler.Core
 			return scheduled.TryAdd(key, crawlUrl);
 		}
 
-		public void Done(string key)
+		public void Done(string key, CrawlUrl crawlUrl)
 		{
 			if (done.TryAdd(key, ""))
 			{
-				CrawlUrl crawlUrl;
 				scheduled.TryRemove(key, out crawlUrl);
 			}
 		}

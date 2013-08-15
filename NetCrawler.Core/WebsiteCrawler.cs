@@ -16,6 +16,7 @@ namespace NetCrawler.Core
 		private int totalCrawledCount;
 
 		private static readonly ILog Log = LogManager.GetLogger(typeof(WebsiteCrawler));
+		private DateTime crawlStarted;
 
 		public WebsiteCrawler(ICrawlScheduler crawlScheduler, ICrawlPersister crawlPersister)
 		{
@@ -44,7 +45,9 @@ namespace NetCrawler.Core
 						Interlocked.Decrement(ref scheduledUrlsCount);
 						Interlocked.Increment(ref totalCrawledCount);
 
-						Log.InfoFormat("Crawled '{0}' - scheduled '{1}', processing '{2}', crawled {3}", crawlResult.CrawlUrl.Url, scheduledUrlsCount, processingUrlsCount, totalCrawledCount);
+						var elapsed = DateTime.Now - crawlStarted;
+
+						Log.InfoFormat("Crawled '{0}' - scheduled '{1}', processing '{2}', crawled {3} in {4}", crawlResult.CrawlUrl.Url, scheduledUrlsCount, processingUrlsCount, totalCrawledCount, elapsed);
 
 						crawlPersister.Save(crawlResult);
 
@@ -82,6 +85,8 @@ namespace NetCrawler.Core
 
 		public async Task<CrawlResult> RunAsync(Website target)
 		{
+			crawlStarted = DateTime.Now;
+
 			return await crawlScheduler.Schedule(target).ContinueWith(t =>
 				{
 					target.LastVisit = DateTimeOffset.Now;
