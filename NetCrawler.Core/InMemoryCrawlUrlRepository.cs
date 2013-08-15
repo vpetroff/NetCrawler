@@ -33,6 +33,35 @@ namespace NetCrawler.Core
 			}
 		}
 
+		public CrawlUrl PeekNext()
+		{
+			CrawlUrl next = null;
+			if (scheduledQueue.TryPeek(out next))
+			{
+				return next;
+			}
+
+			LoadMore();
+
+			scheduledQueue.TryPeek(out next);
+			return next;
+		}
+
+		private void LoadMore()
+		{
+			lock (loadingLock)
+			{
+				var newUrls = scheduled.Take(MaxQueueLength).ToList();
+
+				foreach (var newUrl in newUrls)
+				{
+					scheduledQueue.Enqueue(newUrl.Value);
+					CrawlUrl next;
+					scheduled.TryRemove(newUrl.Key, out next);
+				}
+			}
+		}
+
 		public CrawlUrl Next()
 		{
 			CrawlUrl next;
@@ -42,21 +71,12 @@ namespace NetCrawler.Core
 				return next;
 			}
 			
-			lock (loadingLock)
+			LoadMore();
+
+			if (scheduledQueue.TryDequeue(out next))
 			{
-				var newUrls = scheduled.Take(MaxQueueLength).ToList();
-
-				foreach (var newUrl in newUrls)
-				{
-					scheduledQueue.Enqueue(newUrl.Value);
-					scheduled.TryRemove(newUrl.Key, out next);
-				}
-
-				if (scheduledQueue.TryDequeue(out next))
-				{
-					working.TryAdd(next.Hash, next);
-					return next;
-				}
+				working.TryAdd(next.Hash, next);
+				return next;
 			}
 
 			return null;

@@ -19,6 +19,7 @@ namespace NetCrawler.Core
 		private readonly ConcurrentBag<WebsiteDefinition> websiteDefinitions = new ConcurrentBag<WebsiteDefinition>();
 		private readonly ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition> websiteProcessingDefinitions = new ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition>();
 		private readonly object websiteLock = new object();
+		private readonly object scheduleLock = new object();
 		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
 
 		private readonly ILog log = LogManager.GetLogger(typeof (CrawlScheduler));
@@ -54,26 +55,40 @@ namespace NetCrawler.Core
 
 		private void ScheduleNext()
 		{
-			WebsiteDefinition websiteDefinition;
-
-			do
+			lock (scheduleLock)
 			{
-				websiteDefinition = null;
-				var next = crawlUrlRepository.Next();
-				if (next != null)
+/*
+				if (websiteDefinitions.Any(x => x.UrlsInProcess >= x.Website.MaxConcurrentConnections))
+					return;
+
+*/
+				WebsiteDefinition websiteDefinition;
+
+				do
 				{
-					websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(next) && x.Website.MaxConcurrentConnections > x.UrlsInProcess);
-					if (websiteDefinition != null)
+					websiteDefinition = null;
+					var next = crawlUrlRepository.PeekNext();
+					if (next != null)
 					{
-						var inputCount = websiteProcessingDefinitions[websiteDefinition].Post(next);
-						log.DebugFormat("Process block has {0} pending messages", inputCount);
+						websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(next) && x.UrlsInProcess < (x.Website.MaxConcurrentConnections + 10));
+						if (websiteDefinition != null)
+						{
+							next = crawlUrlRepository.Next();
 
-						Interlocked.Increment(ref websiteDefinition.UrlsInProcess);
+							var inputCount = websiteProcessingDefinitions[websiteDefinition].Post(next);
+							log.DebugFormat("Process block for '{0}' has {1} pending messages", websiteDefinition.Website.RootUrl, inputCount);
 
-						RaisePageProcessing(next);
+							RaisePageProcessing(next);
+
+							Interlocked.Increment(ref websiteDefinition.UrlsInProcess);
+/*
+							if (websiteDefinition.UrlsInProcess >= websiteDefinition.Website.MaxConcurrentConnections)
+								break;
+*/
+						}
 					}
-				}
-			} while (websiteDefinition != null);
+				} while (websiteDefinition != null);
+			}
 		}
 
 		public event Action<CrawlUrl> PageScheduled;

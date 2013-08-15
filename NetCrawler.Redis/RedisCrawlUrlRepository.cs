@@ -32,5 +32,10 @@ namespace NetCrawler.Redis
 		{
 			throw new System.NotImplementedException();
 		}
+
+		public CrawlUrl PeekNext()
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

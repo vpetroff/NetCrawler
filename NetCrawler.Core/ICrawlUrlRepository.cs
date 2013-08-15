@@ -6,5 +6,6 @@
 		bool TryAdd(string key, CrawlUrl crawlUrl);
 		void Done(string key);
 		CrawlUrl Next();
+		CrawlUrl PeekNext();
 	}
 }
