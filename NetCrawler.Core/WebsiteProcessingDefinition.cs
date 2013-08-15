@@ -13,8 +13,10 @@ namespace NetCrawler.Core
 			WebsiteDefinition = websiteDefinition;
 		}
 
-		public ITargetBlock<CrawlUrl> ProcessingBlock { get; set; }
+		public TransformBlock<CrawlUrl, PageCrawlResult> ProcessingBlock { get; set; }
 		public TaskCompletionSource<CrawlResult> CompletionSource { get; set; }
+
+
 
 		public void Complete()
 		{
@@ -24,6 +26,12 @@ namespace NetCrawler.Core
 			WebsiteDefinition.CrawlResult.CrawlEnded = DateTime.Now;
 
 			CompletionSource.SetResult(WebsiteDefinition.CrawlResult);
+		}
+
+		public int Post(CrawlUrl crawlUrl)
+		{
+			ProcessingBlock.Post(crawlUrl);
+			return ProcessingBlock.InputCount;
 		}
 	}
 }

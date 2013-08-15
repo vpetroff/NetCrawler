@@ -22,5 +22,15 @@ namespace NetCrawler.Redis
 		{
 			return client.As<CrawlUrl>().SetEntryIfNotExists(key, crawlUrl);
 		}
+
+		public void Done(string key)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public CrawlUrl Next()
+		{
+			throw new System.NotImplementedException();
+		}
 	}
 }

@@ -29,8 +29,8 @@ namespace NetCrawler.ConsoleHost
 //			var documentStore = new DocumentStoreInitializer("http://SLB-4B6WZN1:8080", "NetCrawler2").DocumentStore;
 			var persister = new RavenDbCrawlPersister(documentStore);
 
-//			var crawlUrlRepository = new InMemoryCrawlUrlRepository();
-			var crawlUrlRepository = new RedisCrawlUrlRepository();
+			var crawlUrlRepository = new InMemoryCrawlUrlRepository();
+//			var crawlUrlRepository = new RedisCrawlUrlRepository();
 
 			var websiteCrawler = new WebsiteCrawler(new CrawlScheduler(urlHasher, configuration, pageCrawler, crawlUrlRepository), persister);
 
@@ -38,17 +38,17 @@ namespace NetCrawler.ConsoleHost
 				new Website
 				{
 					RootUrl = "http://www.karenmillen.com/",
-					MaxConcurrentConnections = 15
+					MaxConcurrentConnections = 25
 				},
 				new Website
 				{
 					RootUrl = "http://uk.tommy.com/",
-					MaxConcurrentConnections = 15
+					MaxConcurrentConnections = 25
 				},
 				new Website
 				{
 					RootUrl = "http://www.houseoffraser.co.uk/",
-					MaxConcurrentConnections = 15
+					MaxConcurrentConnections = 25
 				},
 			});
 

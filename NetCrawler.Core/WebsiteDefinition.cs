@@ -4,6 +4,7 @@
 	{
 		public int UrlsToProcessCount;
 		public int ProcessedUrlsCount;
+		public int UrlsInProcess;
 
 		public Website Website { get; set; }
 

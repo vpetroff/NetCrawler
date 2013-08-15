@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using NetCrawler.Core.Configuration;
+using log4net;
 
 namespace NetCrawler.Core
 {
@@ -20,6 +20,8 @@ namespace NetCrawler.Core
 		private readonly ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition> websiteProcessingDefinitions = new ConcurrentDictionary<WebsiteDefinition, WebsiteProcessingDefinition>();
 		private readonly object websiteLock = new object();
 		private readonly ActionBlock<PageCrawlResult> schedulingBlock;
+
+		private readonly ILog log = LogManager.GetLogger(typeof (CrawlScheduler));
 
 		public CrawlScheduler(IUrlHasher urlHasher, IConfiguration configuration, ISinglePageCrawler pageCrawler, ICrawlUrlRepository crawlUrlRepository)
 		{
@@ -36,30 +38,59 @@ namespace NetCrawler.Core
 
 					RaisePageCrawled(result);
 					
-					var scheduledLinksCount = 0;
-
 					if (result.Links.Any())
 					{
-						scheduledLinksCount = Schedule(result.Links);
+						Schedule(result.Links);
 					}
 
-					if (scheduledLinksCount == 0)
+					if (websiteDefinition.UrlsToProcessCount == websiteDefinition.ProcessedUrlsCount)
 					{
-						if (websiteDefinition.UrlsToProcessCount == websiteDefinition.ProcessedUrlsCount)
-						{
-							websiteProcessingDefinitions[websiteDefinition].Complete();
-						}
+						websiteProcessingDefinitions[websiteDefinition].Complete();
 					}
+
+					ScheduleNext();
 				});
 		}
 
+		private void ScheduleNext()
+		{
+			WebsiteDefinition websiteDefinition;
+
+			do
+			{
+				websiteDefinition = null;
+				var next = crawlUrlRepository.Next();
+				if (next != null)
+				{
+					websiteDefinition = websiteDefinitions.FirstOrDefault(x => x.Website.IsRelativeUrl(next) && x.Website.MaxConcurrentConnections > x.UrlsInProcess);
+					if (websiteDefinition != null)
+					{
+						var inputCount = websiteProcessingDefinitions[websiteDefinition].Post(next);
+						log.DebugFormat("Process block has {0} pending messages", inputCount);
+
+						Interlocked.Increment(ref websiteDefinition.UrlsInProcess);
+
+						RaisePageProcessing(next);
+					}
+				}
+			} while (websiteDefinition != null);
+		}
+
 		public event Action<CrawlUrl> PageScheduled;
+		public event Action<CrawlUrl> PageProcessing;
 		public event Action<PageCrawlResult> PageCrawled;
 		public event Action<Website> WebsiteScheduled;
 		
 		private void RaisePageScheduled(CrawlUrl crawlUrl)
 		{
 			var handler = PageScheduled;
+			if (handler != null)
+				handler.Invoke(crawlUrl);
+		}
+
+		private void RaisePageProcessing(CrawlUrl crawlUrl)
+		{
+			var handler = PageProcessing;
 			if (handler != null)
 				handler.Invoke(crawlUrl);
 		}
@@ -119,7 +150,9 @@ namespace NetCrawler.Core
 
 			RaiseWebsiteScheduled(website);
 
-			Schedule(new[] { website.RootUrl });
+			var outstandingLinks = Schedule(new[] { website.RootUrl });
+			if (outstandingLinks > 0)
+				ScheduleNext();
 
 			return websiteProcessingDefinition.CompletionSource.Task;
 		}
@@ -140,7 +173,18 @@ namespace NetCrawler.Core
 								: configuration.MaxConcurrentConnectionsPerWebsite,
 					});
 
-			processingBlock.LinkTo(schedulingBlock);
+			var persistBlock = new TransformBlock<PageCrawlResult, PageCrawlResult>(result =>
+				{
+					crawlUrlRepository.Done(result.CrawlUrl.Hash);
+
+					Interlocked.Decrement(ref result.CrawlUrl.WebsiteDefinition.UrlsInProcess);
+
+					return result;
+				});
+
+			processingBlock.LinkTo(persistBlock);
+			persistBlock.LinkTo(schedulingBlock);
+
 			return processingBlock;
 		}
 
@@ -171,15 +215,18 @@ namespace NetCrawler.Core
 							Interlocked.Increment(ref websiteDefinition.UrlsToProcessCount);
 							Interlocked.Increment(ref scheduledLinksCount);
 
-							websiteProcessingDefinitions[websiteDefinition].ProcessingBlock.Post(crawlUrl);
+/*
+							var inputCount = websiteProcessingDefinitions[websiteDefinition].Post(crawlUrl);
+							log.DebugFormat("Process block has {0} pending messages", inputCount);
 
+*/
 							RaisePageScheduled(crawlUrl);
 						}
 					}
 				}
 				catch (Exception ex)
 				{
-					Debug.WriteLine(ex.Message);
+					log.Error(ex);
 				}
 			}
 

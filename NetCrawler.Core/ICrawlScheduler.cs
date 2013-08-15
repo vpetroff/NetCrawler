@@ -12,5 +12,6 @@ namespace NetCrawler.Core
 		event Action<PageCrawlResult> PageCrawled;
 		event Action<Website> WebsiteScheduled;
 		event Action<CrawlUrl> PageScheduled;
+		event Action<CrawlUrl> PageProcessing;
 	}
 }

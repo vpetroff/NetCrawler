@@ -11,7 +11,8 @@ namespace NetCrawler.Core
 	{
 		private readonly ICrawlScheduler crawlScheduler;
 		private readonly ICrawlPersister crawlPersister;
-		private int urlsCount;
+		private int scheduledUrlsCount;
+		private int processingUrlsCount;
 
 		private static readonly ILog Log = LogManager.GetLogger(typeof(WebsiteCrawler));
 
@@ -22,18 +23,27 @@ namespace NetCrawler.Core
 
 			crawlScheduler.PageScheduled += crawlUrl =>
 				{
-					Interlocked.Increment(ref urlsCount);
+					Interlocked.Increment(ref scheduledUrlsCount);
 
-					Log.InfoFormat("Scheduled '{0}' - total '{1}'", crawlUrl.Url, urlsCount);
+					Log.DebugFormat("Scheduled '{0}' - scheduled '{1}', processing '{2}'", crawlUrl.Url, scheduledUrlsCount, processingUrlsCount);
+				};
+
+			crawlScheduler.PageProcessing += crawlUrl =>
+				{
+					Interlocked.Increment(ref processingUrlsCount);
+
+					Log.InfoFormat("Processing '{0}' - scheduled '{1}', processing '{2}'", crawlUrl.Url, scheduledUrlsCount, processingUrlsCount);
 				};
 
 			crawlScheduler.PageCrawled += crawlResult =>
 				{
 					try
 					{
-						Interlocked.Decrement(ref urlsCount);
+						Interlocked.Decrement(ref processingUrlsCount);
+						Interlocked.Decrement(ref scheduledUrlsCount);
 
-						Log.InfoFormat("Crawled '{0}' - left '{1}'", crawlResult.CrawlUrl.Url, urlsCount);
+						Log.InfoFormat("Crawled '{0}' - scheduled '{1}', processing '{2}'", crawlResult.CrawlUrl.Url, scheduledUrlsCount, processingUrlsCount);
+
 						crawlPersister.Save(crawlResult);
 
 						crawlResult.CrawlUrl.WebsiteDefinition.Website.LastVisit = DateTimeOffset.Now;
