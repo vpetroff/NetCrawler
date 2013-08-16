@@ -70,6 +70,7 @@ namespace NetCrawler.Core
 						{
 							next = crawlUrlRepository.Next();
 
+							next.WebsiteDefinition = websiteDefinition;
 							var inputCount = websiteProcessingDefinitions[websiteDefinition].Post(next);
 							log.DebugFormat("Process block for '{0}' has {1} pending messages", websiteDefinition.Website.RootUrl, inputCount);
 
